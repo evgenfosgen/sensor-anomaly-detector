@@ -1,0 +1,372 @@
+{
+  "targets": [
+    "X06",
+    "X07",
+    "X08",
+    "X09",
+    "X10",
+    "X11"
+  ],
+  "branches": [
+    "strict_robust",
+    "full_telemetry"
+  ],
+  "models": {
+    "X06": {
+      "strict_robust": {
+        "model_path": "X06_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "global_symmetric_conformal",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.024746915211432352,
+          "group_expansions": {}
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X06_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X07",
+          "X08",
+          "X09",
+          "X10",
+          "X11",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0,
+          "group_expansions": {
+            "0": 0,
+            "1": 0,
+            "2": 0.01114094851605607
+          }
+        }
+      }
+    },
+    "X07": {
+      "strict_robust": {
+        "model_path": "X07_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "global_symmetric_conformal",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.02524528460438713,
+          "group_expansions": {}
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X07_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X06",
+          "X08",
+          "X09",
+          "X10",
+          "X11",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0,
+          "group_expansions": {
+            "0": 0,
+            "1": 0,
+            "2": 0.025155315070265694
+          }
+        }
+      }
+    },
+    "X08": {
+      "strict_robust": {
+        "model_path": "X08_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "global_symmetric_conformal",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.06651866761663161,
+          "group_expansions": {}
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X08_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X06",
+          "X07",
+          "X09",
+          "X10",
+          "X11",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.007801751637574572,
+          "group_expansions": {
+            "0": 0,
+            "1": 0.012180989352184035,
+            "2": 0.017320153117922565
+          }
+        }
+      }
+    },
+    "X09": {
+      "strict_robust": {
+        "model_path": "X09_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.03868871634498516,
+          "group_expansions": {
+            "0": 0.034018123947223755,
+            "1": 0.03301317955846461,
+            "2": 0.055847179277916936
+          }
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X09_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X06",
+          "X07",
+          "X08",
+          "X10",
+          "X11",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.04662720175683621,
+          "group_expansions": {
+            "0": 0.057035728741759883,
+            "1": 0.04618096164600627,
+            "2": 0.030288922298814303
+          }
+        }
+      }
+    },
+    "X10": {
+      "strict_robust": {
+        "model_path": "X10_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "global_symmetric_conformal",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.02464535078393082,
+          "group_expansions": {}
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X10_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X06",
+          "X07",
+          "X08",
+          "X09",
+          "X11",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.0063111485359339525,
+          "group_expansions": {
+            "0": 0.013903729823130373,
+            "1": 0.009199626252458515,
+            "2": 0
+          }
+        }
+      }
+    },
+    "X11": {
+      "strict_robust": {
+        "model_path": "X11_strict.json",
+        "model_type": "linear_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0,
+          "group_expansions": {
+            "0": 0,
+            "1": 0,
+            "2": 0.25292274845292084
+          }
+        }
+      },
+      "full_telemetry": {
+        "model_path": "X11_full.json",
+        "model_type": "catboost_multi_quantile",
+        "features": [
+          "X01",
+          "X02",
+          "X03",
+          "X04",
+          "X05",
+          "X06",
+          "X07",
+          "X08",
+          "X09",
+          "X10",
+          "X12"
+        ],
+        "quantile_levels": [
+          0.01,
+          0.5,
+          0.99
+        ],
+        "quantile_name": "q98",
+        "calibration": {
+          "method": "X01_mondrian",
+          "alpha": 0.02000000000000001,
+          "global_quantile_level": 0.9800010802469136,
+          "global_expansion": 0.11344876337951959,
+          "group_expansions": {
+            "0": 0,
+            "1": 0.18193069512269133,
+            "2": 0
+          }
+        }
+      }
+    }
+  }
+}

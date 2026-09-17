@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detector Anomaly — локальная демонстрация</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f3f5f7;
+      --panel: #ffffff;
+      --line: #d8dee5;
+      --text: #1f2933;
+      --muted: #64707d;
+      --blue: #1d5f9e;
+      --green: #23824b;
+      --orange: #b76b00;
+      --red: #a52a38;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--text); font: 14px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .page { max-width: 1660px; margin: 0 auto; padding: 18px 20px 24px; }
+    header { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 12px; }
+    h1 { margin: 0; font-size: 24px; font-weight: 650; letter-spacing: -.02em; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); }
+    .connection { color: var(--muted); font-size: 12px; text-align: right; }
+    .connection.good { color: var(--green); font-weight: 650; }
+    .status-lines { display: grid; gap: 7px; margin-bottom: 12px; }
+    .status-line { display: flex; align-items: baseline; gap: 14px; border: 1px solid var(--line); border-left: 5px solid var(--green); background: var(--panel); padding: 11px 16px; font-size: 23px; font-weight: 650; }
+    .status-line .caption { flex: 0 0 auto; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+    .status-line .value { min-width: 0; }
+    .status-line.outside { border-left-color: var(--orange); }
+    .status-line.suspicious { border-left-color: var(--red); color: var(--red); }
+    .status-line.action-line { border-left-color: var(--blue); }
+    .controls { display: grid; grid-template-columns: 130px 130px minmax(130px, 1fr) minmax(360px, auto); gap: 9px; align-items: end; background: var(--panel); border: 1px solid var(--line); padding: 11px; margin-bottom: 10px; }
+    label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; }
+    select, button { min-height: 34px; border: 1px solid #bbc5cf; border-radius: 4px; background: #fff; color: var(--text); padding: 5px 8px; font: inherit; }
+    button { cursor: pointer; font-weight: 600; }
+    button:hover { border-color: var(--blue); }
+    button.primary { background: #e6f1fb; border-color: #7ea9cf; }
+    button.danger { color: var(--red); border-color: #c88a92; }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .charts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .chart { min-width: 0; background: var(--panel); border: 1px solid var(--line); padding: 7px 8px 4px; }
+    .chart.suspicious { border-color: var(--red); background: #fff7f7; }
+    .chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-height: 38px; }
+    .chart-main { min-width: 0; }
+    .chart-head strong { font-size: 15px; }
+    .chart-values { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 11px; line-height: 1.25; }
+    .chart-values b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 650; }
+    .chart-head .state { flex: 0 0 auto; color: var(--green); font-size: 11px; font-weight: 750; white-space: nowrap; }
+    .chart-head.outside .state { color: var(--orange); }
+    .chart-head.suspicious .state { color: var(--red); }
+    canvas { display: block; width: 100%; height: 158px; }
+    .events { background: var(--panel); border: 1px solid var(--line); margin-top: 10px; padding: 9px 11px; color: var(--muted); font-size: 12px; }
+    .events h2 { color: var(--text); font-size: 14px; margin: 0 0 4px; }
+    .events div { padding: 2px 0; border-top: 1px solid #edf0f2; }
+    .error { color: var(--red); }
+    @media (max-width: 1180px) {
+      .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .actions { grid-column: span 3; }
+      .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 700px) {
+      .page { padding: 12px 8px 18px; }
+      header { align-items: start; flex-direction: column; }
+      .connection { text-align: left; }
+      .status-line { font-size: 20px; }
+      .controls { grid-template-columns: 1fr; }
+      .actions { grid-column: auto; }
+      .charts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>Detector Anomaly</h1>
+        <p class="subtitle">Локальная демонстрация</p>
+      </div>
+      <div id="connection" class="connection">Подключение...</div>
+    </header>
+
+    <section class="status-lines" aria-label="Состояние демонстрации">
+      <div id="action-line" class="status-line action-line" data-testid="status-line" aria-live="polite">
+        <span class="caption">Текущее действие</span>
+        <strong class="value">Подключение к демонстрации...</strong>
+      </div>
+      <div id="detector-line" class="status-line detector-line" data-testid="detector-status" aria-live="polite">
+        <span class="caption">Состояние детектора</span>
+        <strong class="value">-</strong>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Управление демонстрацией">
+      <label>Режим
+        <select id="mode" data-testid="mode-select">
+          <option value="1">Режим 1</option>
+          <option value="2" selected>Режим 2</option>
+          <option value="3">Режим 3</option>
+        </select>
+      </label>
+      <label>Скорость
+        <select id="speed" data-testid="speed-select">
+          <option value="1">1×</option>
+          <option value="5" selected>5×</option>
+          <option value="10">10×</option>
+          <option value="20">20×</option>
+        </select>
+      </label>
+      <label>Канал
+        <select id="target" data-testid="target-select"></select>
+      </label>
+      <div class="actions">
+        <button id="play" class="primary" data-testid="play">Запустить</button>
+        <button id="pause" data-testid="pause">Пауза</button>
+        <button id="inject" class="danger" data-testid="inject">Внести смещение</button>
+        <button id="clear" data-testid="clear">Сбросить неисправность</button>
+        <button id="scenario" class="primary" data-testid="scenario">Запустить сценарий</button>
+        <button id="reset" data-testid="reset">Перезапустить</button>
+      </div>
+    </section>
+
+    <section id="charts" class="charts" aria-label="Графики контролируемых каналов"></section>
+
+    <section class="events">
+      <h2>События</h2>
+      <div id="events">Ожидание данных...</div>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const STATUS_LABELS = {
+      NORMAL: "НОРМА",
+      OUTSIDE: "ОТКЛОНЕНИЕ",
+      SUSPICIOUS: "ОТКЛОНЕНИЕ"
+    };
+    const DISPLAY_WINDOW = 180;
+    const state = {
+      lastClock: null,
+      series: null,
+      timestamps: [],
+      targets: [],
+      demo: null,
+      position: 0,
+      anchorPosition: 0,
+      anchorWall: performance.now(),
+      speed: 5,
+      playing: false,
+      raf: null,
+      scenarioRunning: false,
+      scenarioMessage: ""
+    };
+    const $ = (id) => document.getElementById(id);
+
+    function setConnection(text, good = false) {
+      $("connection").textContent = text;
+      $("connection").classList.toggle("good", good);
+    }
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail || payload.message || "Запрос не выполнен");
+      return payload;
+    }
+
+    async function command(name, values = {}) {
+      const payload = await request("/api/command", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({command: name, ...values})
+      });
+      if (payload.type === "snapshot") renderSnapshot(payload);
+      else renderClock(payload);
+      return payload;
+    }
+
+    function finite(value) {
+      return value != null && Number.isFinite(Number(value));
+    }
+
+    function currentPosition() {
+      if (!state.playing || !state.timestamps.length) return state.position;
+      const elapsed = Math.max(0, performance.now() - state.anchorWall) / 1000;
+      return Math.min(state.timestamps.length - 1, state.anchorPosition + elapsed * state.speed);
+    }
+
+    function statusClass(status) {
+      if (status === "NORMAL") return "normal";
+      if (status === "OUTSIDE") return "outside";
+      return "suspicious";
+    }
+
+    function statusLabel(status) {
+      return STATUS_LABELS[status] || "ОТКЛОНЕНИЕ";
+    }
+
+    function formatValue(value) {
+      return finite(value) ? Number(value).toFixed(2) : "-";
+    }
+
+    function buildCharts(targets) {
+      const container = $("charts");
+      container.replaceChildren();
+      targets.forEach((target) => {
+        const card = document.createElement("article");
+        card.className = "chart";
+        card.dataset.target = target;
+        const head = document.createElement("div");
+        head.className = "chart-head normal";
+        head.innerHTML = `<div class="chart-main"><strong>${target}</strong><div class="chart-values"><span>Значение: <b class="observed">-</b></span><span>Диапазон: <b class="interval">-</b></span></div></div><span class="state">НОРМА</span>`;
+        const canvas = document.createElement("canvas");
+        canvas.dataset.testid = `chart-${target}`;
+        card.append(head, canvas);
+        container.appendChild(card);
+      });
+      const select = $("target");
+      select.replaceChildren();
+      targets.forEach((target) => {
+        const option = document.createElement("option");
+        option.value = target;
+        option.textContent = target;
+        select.appendChild(option);
+      });
+    }
+
+    function drawPath(ctx, values, start, end, x, y) {
+      let started = false;
+      for (let index = start; index <= end; index += 1) {
+        if (!finite(values[index])) { started = false; continue; }
+        const point = [x(index), y(Number(values[index]))];
+        if (!started) { ctx.moveTo(...point); started = true; }
+        else ctx.lineTo(...point);
+      }
+    }
+
+    function drawBand(ctx, lower, upper, start, end, x, y) {
+      let run = [];
+      const flush = () => {
+        if (run.length < 2) { run = []; return; }
+        ctx.beginPath();
+        run.forEach((index, offset) => {
+          const method = offset === 0 ? "moveTo" : "lineTo";
+          ctx[method](x(index), y(Number(lower[index])));
+        });
+        [...run].reverse().forEach((index) => ctx.lineTo(x(index), y(Number(upper[index]))));
+        ctx.closePath();
+        ctx.fillStyle = "rgba(35, 130, 75, .16)";
+        ctx.fill();
+        run = [];
+      };
+      for (let index = start; index <= end; index += 1) {
+        if (finite(lower[index]) && finite(upper[index])) run.push(index);
+        else flush();
+      }
+      flush();
+    }
+
+    function drawChart(canvas, target, position) {
+      const entry = state.series[target];
+      if (!entry) return;
+      const ratio = window.devicePixelRatio || 1;
+      const width = Math.max(180, canvas.clientWidth);
+      const height = Math.max(120, canvas.clientHeight);
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const end = Math.min(state.timestamps.length - 1, Math.max(0, Math.floor(position)));
+      const start = Math.max(0, end - DISPLAY_WINDOW + 1);
+      const left = 46, right = 6, top = 8, bottom = 18;
+      const plotWidth = Math.max(30, width - left - right);
+      const plotHeight = Math.max(30, height - top - bottom);
+      const values = [];
+      [entry.values, entry.lower, entry.upper].forEach((array) => {
+        for (let index = start; index <= end; index += 1) if (finite(array[index])) values.push(Number(array[index]));
+      });
+      let low = values.length ? Math.min(...values) : 0;
+      let high = values.length ? Math.max(...values) : 1;
+      const padding = Math.max((high - low) * .1, Math.abs(high || 1) * .01, .001);
+      low -= padding; high += padding;
+      const x = (index) => left + ((index - start) / Math.max(1, end - start)) * plotWidth;
+      const y = (value) => top + (1 - (value - low) / Math.max(.000001, high - low)) * plotHeight;
+      ctx.strokeStyle = "#e5e9ed";
+      ctx.lineWidth = 1;
+      [0, .5, 1].forEach((fraction) => {
+        const lineY = top + fraction * plotHeight;
+        ctx.beginPath(); ctx.moveTo(left, lineY); ctx.lineTo(width - right, lineY); ctx.stroke();
+        ctx.fillStyle = "#596572"; ctx.font = "10px sans-serif"; ctx.textAlign = "right";
+        ctx.fillText((high - fraction * (high - low)).toFixed(2), left - 4, lineY + 3);
+      });
+      ctx.textAlign = "left";
+      ctx.strokeStyle = "#aeb8c2";
+      ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, top + plotHeight); ctx.stroke();
+      drawBand(ctx, entry.lower, entry.upper, start, end, x, y);
+      ctx.beginPath(); drawPath(ctx, entry.lower, start, end, x, y); ctx.strokeStyle = "rgba(35, 130, 75, .65)"; ctx.stroke();
+      ctx.beginPath(); drawPath(ctx, entry.upper, start, end, x, y); ctx.strokeStyle = "rgba(35, 130, 75, .65)"; ctx.stroke();
+      ctx.beginPath(); drawPath(ctx, entry.values, start, end, x, y); ctx.strokeStyle = "#1d5f9e"; ctx.lineWidth = 1.4; ctx.stroke();
+      for (let index = start; index <= end; index += 1) {
+        if (!finite(entry.values[index])) continue;
+        let color = null, radius = 2.5;
+        if (entry.suspicious[index]) { color = "#a52a38"; radius = 3.2; }
+        else if (entry.outlier[index]) { color = "#b76b00"; radius = 2.8; }
+        if (color) { ctx.beginPath(); ctx.arc(x(index), y(Number(entry.values[index])), radius, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
+      }
+      const current = Math.max(start, Math.min(end, position));
+      ctx.beginPath(); ctx.moveTo(x(current), top); ctx.lineTo(x(current), top + plotHeight); ctx.strokeStyle = "rgba(31, 41, 51, .35)"; ctx.stroke();
+      const startText = new Date(state.timestamps[start]).toLocaleTimeString("ru-RU");
+      const endText = new Date(state.timestamps[end]).toLocaleTimeString("ru-RU");
+      ctx.fillStyle = "#7a858f"; ctx.font = "9px sans-serif"; ctx.fillText(startText, left, height - 3); ctx.textAlign = "right"; ctx.fillText(endText, width - right, height - 3); ctx.textAlign = "left";
+    }
+
+    function renderClock(clock) {
+      state.lastClock = clock;
+      state.position = Number(clock.position) || 0;
+      state.anchorPosition = state.position;
+      state.anchorWall = performance.now();
+      state.speed = Number(clock.speed) || 1;
+      state.playing = Boolean(clock.playing);
+      const actionLine = $("action-line");
+      actionLine.className = "status-line action-line";
+      actionLine.querySelector(".value").textContent = state.scenarioMessage || clock.action || "-";
+      const detectorLine = $("detector-line");
+      const detectorState = clock.detector_state || clock.headline || "-";
+      detectorLine.className = "status-line detector-line";
+      detectorLine.querySelector(".value").textContent = detectorState;
+      if (detectorState.startsWith("Обнаружено отклонение")) detectorLine.classList.add("suspicious");
+      else if (detectorState.startsWith("Ожидание") || detectorState.startsWith("Отклонение")) detectorLine.classList.add("outside");
+      $("mode").value = String(clock.requested_mode);
+      document.querySelectorAll(".chart").forEach((card) => {
+        const target = card.dataset.target;
+        const current = clock.states?.[target] || {};
+        const status = current.status || "NORMAL";
+        card.className = `chart ${statusClass(status)}`;
+        const head = card.querySelector(".chart-head");
+        head.className = `chart-head ${statusClass(status)}`;
+        head.querySelector(".state").textContent = statusLabel(status);
+        head.querySelector(".observed").textContent = formatValue(current.value);
+        head.querySelector(".interval").textContent = `[${formatValue(current.lower)} ; ${formatValue(current.upper)}]`;
+      });
+      const log = $("events");
+      log.replaceChildren();
+      (clock.events || []).slice().reverse().forEach((event) => {
+        const line = document.createElement("div");
+        line.textContent = event;
+        log.appendChild(line);
+      });
+      requestRender();
+    }
+
+    function renderSnapshot(payload) {
+      state.series = payload.series;
+      state.timestamps = payload.timestamps;
+      state.demo = payload.demo || state.demo;
+      if (!state.targets.length || state.targets.join(",") !== payload.targets.join(",")) {
+        state.targets = payload.targets.slice();
+        buildCharts(state.targets);
+      }
+      renderClock(payload.clock);
+    }
+
+    function renderAll() {
+      if (!state.series) return;
+      const position = currentPosition();
+      document.querySelectorAll(".chart").forEach((card) => drawChart(card.querySelector("canvas"), card.dataset.target, position));
+      if (state.playing) state.raf = requestAnimationFrame(() => { state.raf = null; renderAll(); });
+    }
+
+    function requestRender() {
+      if (state.raf === null) state.raf = requestAnimationFrame(() => { state.raf = null; renderAll(); });
+    }
+
+    async function waitForClock(predicate, timeoutMs = 10000) {
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        const clock = await request("/api/clock");
+        renderClock(clock);
+        if (predicate(clock)) return clock;
+        await delay(250);
+      }
+      throw new Error("Сценарий не дождался ответа демонстрации");
+    }
+
+    function delay(milliseconds) {
+      return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+
+    function setScenarioBusy(busy) {
+      state.scenarioRunning = busy;
+      document.querySelectorAll(".controls select, .controls button").forEach((control) => {
+        control.disabled = busy;
+      });
+      $("scenario").textContent = busy ? "Сценарий выполняется..." : "Запустить сценарий";
+    }
+
+    function showScenarioMessage(message) {
+      state.scenarioMessage = message;
+      if (state.lastClock) renderClock(state.lastClock);
+    }
+
+    async function runScenario() {
+      if (state.scenarioRunning) return;
+      state.scenarioMessage = "";
+      setScenarioBusy(true);
+      try {
+        const demo = state.demo || {};
+        const modes = demo.scenario_modes || [1, 2, 3, 2, 1];
+        const targets = demo.scenario_targets || ["X06", "X08", "X10"];
+        const modeDwellMs = Number(demo.mode_dwell_seconds || 2.5) * 1000;
+        const holdAfterAlarmMs = Number(demo.fault_hold_after_alarm_seconds || 4) * 1000;
+        const resetDwellMs = Number(demo.reset_dwell_seconds || 2) * 1000;
+        const detectionTimeoutMs = Math.max(10000, Number(demo.detection_timeout_seconds || 15) * 1000);
+        await command("reset");
+        await command("set_speed", {speed: 10});
+        let started = false;
+        for (const mode of modes) {
+          await command("set_mode", {mode});
+          if (!started) {
+            await command("play");
+            started = true;
+          }
+          await waitForClock((clock) => !clock.transition_active && clock.mode === mode, 30000);
+          await delay(modeDwellMs);
+        }
+        for (const target of targets) {
+          $("target").value = target;
+          await command("inject_fault", {target});
+          await waitForClock((clock) => {
+            const stateForTarget = clock.states?.[target];
+            return stateForTarget?.status === "SUSPICIOUS" || clock.detector_state === `Обнаружено отклонение: ${target}`;
+          }, detectionTimeoutMs);
+          await delay(holdAfterAlarmMs);
+          await command("clear_fault");
+          await delay(resetDwellMs);
+        }
+        await command("pause");
+        showScenarioMessage("Сценарий завершён");
+      } catch (error) {
+        showScenarioMessage(`Сценарий остановлен: ${error.message}`);
+        await command("clear_fault").catch(() => {});
+        await command("pause").catch(() => {});
+      } finally {
+        setScenarioBusy(false);
+      }
+    }
+
+    async function loadSnapshot() {
+      try {
+        renderSnapshot(await request("/api/snapshot"));
+        setConnection("Демонстрация подключена", true);
+      } catch (_) {
+        setConnection("Нет соединения");
+        setTimeout(loadSnapshot, 1000);
+      }
+    }
+
+    async function poll() {
+      try {
+        renderClock(await request("/api/clock"));
+        setConnection("Демонстрация подключена", true);
+      } catch (_) {
+        setConnection("Нет соединения");
+      }
+    }
+
+    function manualAction(name, values = {}) {
+      state.scenarioMessage = "";
+      command(name, values).catch((error) => showScenarioMessage(error.message));
+    }
+
+    $("play").addEventListener("click", () => manualAction("play"));
+    $("pause").addEventListener("click", () => manualAction("pause"));
+    $("reset").addEventListener("click", () => manualAction("reset"));
+    $("clear").addEventListener("click", () => manualAction("clear_fault"));
+    $("inject").addEventListener("click", () => manualAction("inject_fault", {target: $("target").value}));
+    $("speed").addEventListener("change", (event) => manualAction("set_speed", {speed: Number(event.target.value)}));
+    $("mode").addEventListener("change", (event) => manualAction("set_mode", {mode: Number(event.target.value)}));
+    $("scenario").addEventListener("click", runScenario);
+    window.addEventListener("resize", requestRender);
+    loadSnapshot();
+    setInterval(poll, 250);
+  </script>
+</body>
+</html>

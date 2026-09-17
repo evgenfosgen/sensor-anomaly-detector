@@ -1,0 +1,21 @@
+{
+  "default_speed": 5,
+  "playback_speeds": [1, 5, 10, 20],
+  "bias_offsets": {
+    "X06": 0.8,
+    "X07": 0.8,
+    "X08": 0.9,
+    "X09": 0.4,
+    "X10": 0.9,
+    "X11": 4.0
+  },
+  "scenario": {
+    "modes": [1, 2, 3, 2, 1],
+    "targets": ["X06", "X08", "X10"],
+    "transition_seconds": 120,
+    "mode_dwell_seconds": 2.5,
+    "fault_hold_after_alarm_seconds": 4.0,
+    "reset_dwell_seconds": 2.0,
+    "detection_timeout_seconds": 15.0
+  }
+}
